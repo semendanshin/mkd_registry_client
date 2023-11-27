@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     dadata_secret: SecretStr
     db_url: SecretStr
     postgres_password: SecretStr
+    EGRN_REQUESTS_API_HOST: str
+
 
     class Config:
         env_file = '.env'

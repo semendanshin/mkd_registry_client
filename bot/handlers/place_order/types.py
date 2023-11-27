@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from .enums import ClientType
+from database.enums import ClientTypeEnum
 
 
 class PlaceOrderData(BaseModel):
@@ -7,12 +7,14 @@ class PlaceOrderData(BaseModel):
     username: str = None
     first_name: str = None
 
+    egrn_request_id: int = None
+
     address: str = None
     cadnum: str = None
 
     contact_phone: str = None
 
-    client_type: ClientType = None
+    client_type: ClientTypeEnum = None
     inn: str = None
     company_name: str = None
     fio: str = None

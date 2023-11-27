@@ -17,13 +17,6 @@ class PlaceOrderConversationSteps(pyEnum):
     CONFIRM_ORDER = 'confirm_order'
 
 
-class ClientType(pyEnum):
-    """Client type enum."""
-
-    INDIVIDUAL = 'individual'
-    LEGAL = 'legal'
-
-
 class ClientTypeHumanReadable(pyEnum):
     """Client type human readable enum."""
 

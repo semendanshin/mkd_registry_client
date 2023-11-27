@@ -2,11 +2,13 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.utils.utils import delete_message_or_skip, delete_messages
+from database.enums import ClientTypeEnum
 
 from crud import user as user_service
 from dadata_repo import DadataRepository
 from config import config
 
+from .manage_data import post_order_to_egrn_api, create_order
 from .keyboards import get_confirm_address_keyboard, CONFIRM_ADDRESS_PATTERN
 from .keyboards import get_confirm_contact_phone_keyboard, CONFIRM_CONTACT_PHONE_PATTERN
 from .keyboards import get_client_type_keyboard, CLIENT_TYPE_PATTERN
@@ -23,7 +25,7 @@ from .static_text import (
     INDIVIDUAL_ORDER_INFO_TEMPLATE,
     ORDER_TEMPLATE,
 )
-from .enums import PlaceOrderConversationSteps, ClientType
+from .enums import PlaceOrderConversationSteps
 from .types import PlaceOrderData
 
 import phonenumbers
@@ -209,9 +211,9 @@ async def process_client_type(update: Update, context: ContextTypes.DEFAULT_TYPE
     callback_data = update.callback_query.data.replace(CLIENT_TYPE_PATTERN + '_', "")
 
     data: PlaceOrderData = context.user_data["place_order_data"]
-    data.client_type = ClientType[callback_data]
+    data.client_type = ClientTypeEnum[callback_data]
 
-    if data.client_type == ClientType.LEGAL:
+    if data.client_type == ClientTypeEnum.LEGAL:
         message = await update.effective_message.reply_text(
             TEXTS[PlaceOrderConversationSteps.ADD_INN],
         )
@@ -308,7 +310,7 @@ async def confirm_fio_or_inn(update: Update, context: ContextTypes.DEFAULT_TYPE)
     else:
         data: PlaceOrderData = context.user_data["place_order_data"]
 
-        if data.client_type == ClientType.LEGAL:
+        if data.client_type == ClientTypeEnum.LEGAL:
             message = await update.effective_message.reply_text(
                 TEXTS[PlaceOrderConversationSteps.ADD_INN],
             )
@@ -354,7 +356,7 @@ async def process_fio_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_order_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data: PlaceOrderData = context.user_data["place_order_data"]
 
-    if data.client_type == ClientType.LEGAL:
+    if data.client_type == ClientTypeEnum.LEGAL:
         customer_info = LEGAL_ORDER_INFO_TEMPLATE.format(
             org_name=data.company_name,
             inn=data.inn,
@@ -393,6 +395,9 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if callback_data:
         data: PlaceOrderData = context.user_data["place_order_data"]
 
+        data = await post_order_to_egrn_api(data)
+        await create_order(context.session, data)
+
         text = ORDER_TEMPLATE.format(
             cadnum=data.cadnum,
             address=data.address,
@@ -402,7 +407,7 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             customer_info=LEGAL_ORDER_INFO_TEMPLATE.format(
                 org_name=data.company_name,
                 inn=data.inn,
-            ) if data.client_type == ClientType.LEGAL else INDIVIDUAL_ORDER_INFO_TEMPLATE.format(
+            ) if data.client_type == ClientTypeEnum.LEGAL else INDIVIDUAL_ORDER_INFO_TEMPLATE.format(
                 fio=data.fio,
             ),
             filename=data.filename,
