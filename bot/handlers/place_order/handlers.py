@@ -8,12 +8,13 @@ from crud import user as user_service
 from dadata_repo import DadataRepository
 from config import config
 
-from .manage_data import post_order_to_egrn_api, create_order
+from .manage_data import post_order_to_egrn_api, create_order, get_order_card_text, get_order_card_text_from_orm
 from .keyboards import get_confirm_address_keyboard, CONFIRM_ADDRESS_PATTERN
 from .keyboards import get_confirm_contact_phone_keyboard, CONFIRM_CONTACT_PHONE_PATTERN
 from .keyboards import get_client_type_keyboard, CLIENT_TYPE_PATTERN
 from .keyboards import get_confirm_fio_or_inn_keyboard, CONFIRM_FIO_OR_INN_PATTERN
 from .keyboards import get_confirm_order_keyboard, CONFIRM_ODER_PATTERN
+from .keyboards import get_to_work_keyboard
 from .static_text import (
     TEXTS,
     ADDRESS_AND_CADNUM_CONFIRMATION_TEMPLATE,
@@ -50,8 +51,6 @@ async def start_place_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def process_address(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("адрес")
-
     data: PlaceOrderData = context.user_data["place_order_data"]
     address = update.message.text
 
@@ -80,8 +79,6 @@ async def process_address(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def process_cadnum(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("кадастровый номер")
-
     data: PlaceOrderData = context.user_data["place_order_data"]
 
     cadnum = update.message.text
@@ -356,25 +353,7 @@ async def process_fio_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_order_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data: PlaceOrderData = context.user_data["place_order_data"]
 
-    if data.client_type == ClientTypeEnum.LEGAL:
-        customer_info = LEGAL_ORDER_INFO_TEMPLATE.format(
-            org_name=data.company_name,
-            inn=data.inn,
-        )
-    else:
-        customer_info = INDIVIDUAL_ORDER_INFO_TEMPLATE.format(
-            fio=data.fio,
-        )
-
-    text = ORDER_TEMPLATE.format(
-        cadnum=data.cadnum,
-        address=data.address,
-        username=data.username,
-        first_name=data.first_name,
-        phone=data.contact_phone,
-        customer_info=customer_info,
-        filename=data.filename,
-    )
+    text = get_order_card_text(data)
 
     await update.effective_message.reply_text(
         text,
@@ -395,43 +374,44 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if callback_data:
         data: PlaceOrderData = context.user_data["place_order_data"]
 
-        data = await post_order_to_egrn_api(data)
-        await create_order(context.session, data)
+        # data = await post_order_to_egrn_api(data)
+        order = await create_order(context.session, data)
 
-        text = ORDER_TEMPLATE.format(
-            cadnum=data.cadnum,
-            address=data.address,
-            username=data.username,
-            first_name=data.first_name,
-            phone=data.contact_phone,
-            customer_info=LEGAL_ORDER_INFO_TEMPLATE.format(
-                org_name=data.company_name,
-                inn=data.inn,
-            ) if data.client_type == ClientTypeEnum.LEGAL else INDIVIDUAL_ORDER_INFO_TEMPLATE.format(
-                fio=data.fio,
-            ),
-            filename=data.filename,
-        )
+        text = await get_order_card_text_from_orm(context.session, order)
 
         admins = await user_service.get_admins(session=context.session)
+        keyboard = get_to_work_keyboard(order.id)
 
         for admin in admins:
-            await context.bot.send_message(
-                admin.id,
-                text,
-            )
             if data.telegram_file_id:
                 await context.bot.send_document(
-                    admin.id,
-                    data.telegram_file_id,
+                    chat_id=admin.id,
+                    document=data.telegram_file_id,
+                    caption=text,
+                    reply_markup=keyboard,
                 )
+            else:
+                await context.bot.send_message(
+                    chat_id=admin.id,
+                    text=text,
+                    reply_markup=keyboard,
+                )
+
+        await delete_message_or_skip(update.effective_message)
+        if order.fio_file_telegram_id:
+            await context.bot.send_document(
+                chat_id=data.user_id,
+                document=order.fio_file_telegram_id,
+                caption=text,
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=data.user_id,
+                text=text,
+            )
 
         await update.effective_message.reply_text(
             THANKS_FOR_ORDER,
-        )
-
-        await update.effective_message.edit_reply_markup(
-            reply_markup=None,
         )
 
         del context.user_data["place_order_data"]

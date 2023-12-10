@@ -50,11 +50,21 @@ CONFIRM_ODER_PATTERN = 'place_order_confirm_order'
 def get_confirm_order_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton('Изм', callback_data=f'{CONFIRM_ODER_PATTERN}_0'),
+            InlineKeyboardButton('Изменить', callback_data=f'{CONFIRM_ODER_PATTERN}_0'),
             InlineKeyboardButton('Подтвердить', callback_data=f'{CONFIRM_ODER_PATTERN}_1'),
         ],
         [
             InlineKeyboardButton('Отменить', callback_data=f'cancel'),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_to_work_keyboard(order_id: int) -> InlineKeyboardMarkup:
+    keyboard = [
+        [
+            InlineKeyboardButton('Отменить', callback_data=f'cancel_order_{order_id}'),
+            InlineKeyboardButton('Взять в работу', callback_data=f'to_work_{order_id}'),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 from database.enums import ClientTypeEnum
 
@@ -15,9 +17,9 @@ class PlaceOrderData(BaseModel):
     contact_phone: str = None
 
     client_type: ClientTypeEnum = None
-    inn: str = None
-    company_name: str = None
-    fio: str = None
+    inn: Optional[str] = None
+    company_name: Optional[str] = None
+    fio: Optional[str] = None
 
-    filename: str = None
-    telegram_file_id: str = None
+    filename: Optional[str] = None
+    telegram_file_id: Optional[str] = None

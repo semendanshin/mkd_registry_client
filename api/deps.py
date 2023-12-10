@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import engine
 from typing import AsyncGenerator

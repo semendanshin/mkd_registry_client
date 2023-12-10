@@ -9,7 +9,7 @@ from bot.handlers.start.keyboards import ORDER_KEYBOARD_BUTTON_TEXT
 def register_handlers(app: Application):
     handler = ConversationHandler(
         entry_points=[
-            MessageHandler(filters.Regex(ORDER_KEYBOARD_BUTTON_TEXT), start_place_order),
+            MessageHandler(filters.Text((ORDER_KEYBOARD_BUTTON_TEXT, )), start_place_order),
         ],
         states={
             PlaceOrderConversationSteps.ADDRESS_OR_CADNUMBER: [

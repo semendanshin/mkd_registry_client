@@ -23,3 +23,13 @@ async def get_order(session: AsyncSession, order_id: int) -> Order:
 async def get_order_by_egrn_request_id(session: AsyncSession, egrn_request_id: int) -> Order:
     result = await session.execute(select(Order).filter(Order.egrn_request_id == egrn_request_id))
     return result.scalars().first()
+
+
+async def update_order(session: AsyncSession, order_id: int, **kwargs) -> Order:
+    order = await get_order(session, order_id)
+    for key, value in kwargs.items():
+        if hasattr(order, key):
+            setattr(order, key, value)
+    await session.commit()
+    await session.refresh(order)
+    return order

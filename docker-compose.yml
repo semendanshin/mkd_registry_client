@@ -27,12 +27,11 @@ services:
     container_name: mkd_bot
     restart: unless-stopped
 #    command: sh -c "python main.py"
-    command: sh -c "uvicorn main:app --port 9999 --host 0.0.0.0 --reload"
+    command: sh -c "uvicorn main:app --port 9999 --host 0.0.0.0"
     volumes:
       - ./logs:/code/logs
       - ./migrations/versions:/code/migrations/versions
       - ./bot:/code/bot
-      - ./bot/persistence.pickle:/code/bot/persistence.pickle
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     ports:

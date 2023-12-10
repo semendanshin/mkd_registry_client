@@ -7,6 +7,9 @@ from database import engine
 from bot.handlers.start.register_handlers import register_handlers as register_start_handlers
 from bot.handlers.place_order.register_handlers import register_handlers as register_place_order_handlers
 from bot.handlers.statistics.register_handlers import register_handlers as register_statistics_handlers
+from bot.handlers.payments.register_handlers import register_handlers as register_payments_handlers
+from bot.handlers.admin_order_processing.register_handlers import register_handlers as register_admin_order_processing_handlers
+
 
 from bot.middlewares import SessionMiddleware, UserMiddleware, Middleware
 
@@ -50,7 +53,7 @@ def get_telegram_app() -> Application:
     token = config.bot_token.get_secret_value()
 
     persistence_input = PersistenceInput(bot_data=True, user_data=True, chat_data=False, callback_data=False)
-    persistence = PicklePersistence('persistence.pickle', store_data=persistence_input, update_interval=1)
+    persistence = PicklePersistence('bot/persistence.pickle', store_data=persistence_input, update_interval=1)
     defaults = Defaults(disable_web_page_preview=True, parse_mode='HTML')
     app = Application.builder().token(token).persistence(persistence).post_init(post_init).defaults(defaults).build()
 
@@ -59,6 +62,8 @@ def get_telegram_app() -> Application:
     register_start_handlers(app)
     register_place_order_handlers(app)
     register_statistics_handlers(app)
+    register_payments_handlers(app)
+    register_admin_order_processing_handlers(app)
 
     # app.add_error_handler(send_stacktrace_to_tg_chat)
 

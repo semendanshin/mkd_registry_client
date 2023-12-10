@@ -40,7 +40,7 @@ class OrderBase(BaseModel):
 
 class OrderCreate(OrderBase):
     user_id: int
-    egrn_request_id: int
+    egrn_request_id: Optional[int] = None
     address: str
     cadnum: str
     contact_phone: str

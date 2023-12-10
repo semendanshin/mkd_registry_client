@@ -1,7 +1,7 @@
 from .enums import PlaceOrderConversationSteps
 
 TEXTS = {
-    PlaceOrderConversationSteps.ADDRESS_OR_CADNUMBER: 'Введите адрес вашего дома текстом или кадастровый номер:',
+    PlaceOrderConversationSteps.ADDRESS_OR_CADNUMBER: 'Введите адрес вашего дома: (текстом или кадастровый номер)',
     PlaceOrderConversationSteps.CONTACT_PHONE: 'Укажите номер телефона с WhatsApp для связи с вами:',
     PlaceOrderConversationSteps.CHOOSE_CLIENT_TYPE: 'Счет выставить на физлицо или юрлицо?',
     PlaceOrderConversationSteps.ADD_INN: 'Введите ИНН:',
@@ -9,32 +9,24 @@ TEXTS = {
     PlaceOrderConversationSteps.ADD_FIO_FILE: 'Вставьте файл с ФИО собственников в формате Excel (пропустить -> /0):',
 }
 
-ADDRESS_AND_CADNUM_CONFIRMATION_TEMPLATE = 'Вы ввели адрес:\n' \
-                                           '{address}\n' \
-                                           'Кадастровый номер:\n' \
-                                           '{cadnum}\n' \
+ADDRESS_AND_CADNUM_CONFIRMATION_TEMPLATE = '{address} ({cadnum})\n' \
                                            'Все верно?'
 
-CONTACT_PHONE_CONFIRMATION_TEMPLATE = 'Вы ввели номер телефона:\n' \
-                                      '{contact_phone}\n' \
+CONTACT_PHONE_CONFIRMATION_TEMPLATE = '{contact_phone}\n' \
                                       'Все верно?'
 
-FIO_CONFIRMATION_TEMPLATE = 'Вы ввели ФИО:\n' \
-                            '{fio}\n' \
+FIO_CONFIRMATION_TEMPLATE = '{fio}\n' \
                             'Все верно?'
 
-INN_CONFIRMATION_TEMPLATE = 'Вы ввели ИНН:\n' \
-                            '{inn}\n' \
-                            'Название организации:\n' \
-                            '{org_name}\n' \
+INN_CONFIRMATION_TEMPLATE = '{org_name} ({inn})\n' \
                             'Все верно?'
 
 THANKS_FOR_ORDER = 'Спасибо за вашу заявку!\n' \
                    'Мы уже приступили к выполнению вашего заказа.\n' \
                    'В ближайшее время Вы получите расчет цены за РеестрМКД.'
 
-ORDER_TEMPLATE = '<b>Реестр МКД (с фио без фио?)</b>\n' \
-                 '<b>Заказ номер:</b> №\n' \
+ORDER_TEMPLATE = '<b>Реестр МКД ({fio_is_provided_text})</b>\n' \
+                 '{order_number_text}' \
                  '<b>Кадномер:</b> {cadnum}\n' \
                  '<b>Адрес:</b> {address}\n' \
                  '<b>Ник заказчика:</b> @{username} ({first_name})\n' \

@@ -1,8 +1,10 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict()
+
     bot_token: SecretStr
     dadata_token: SecretStr
     dadata_secret: SecretStr
@@ -10,10 +12,10 @@ class Settings(BaseSettings):
     postgres_password: SecretStr
     EGRN_REQUESTS_API_HOST: str
 
-
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'
+
 
 
 config = Settings()
