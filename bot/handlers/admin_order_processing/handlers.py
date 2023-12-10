@@ -6,6 +6,8 @@ from bot.utils.utils import delete_message_or_skip, delete_messages
 from crud import order as order_service
 from egrn_requests_api import egrn_requests_api
 
+from database.enums import OrderStatusEnum
+
 from .keyboards import get_delete_r1r7_keyboard, get_paid_keyboard
 
 
@@ -14,10 +16,10 @@ async def send_to_work(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     order = await order_service.get_order(context.session, order_id)
 
-    order_request = await egrn_requests_api.send_order_to_work(order.cadnum, bool(order.fio_file_telegram_id))
+    order_request = await egrn_requests_api.create_request(order.cadnum, bool(order.fio_file_telegram_id), order.id)
     order_request_id = order_request.get("id")
 
-    await order_service.update_order(context.session, order_id, egrn_request_id=order_request_id)
+    await order_service.update_order(context.session, order_id, egrn_request_id=order_request_id, status=OrderStatusEnum.INWORK)
 
     await update.callback_query.answer(
         text="Заказ отправлен на обработку",
@@ -31,8 +33,6 @@ async def send_to_work(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def admin_cancel_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     order_id = int(update.callback_query.data.split('_')[-1])
-
-    await order_service.update_order(context.session, order_id, status="canceled")
 
     await update.callback_query.answer(
         text="Заказ отменен",
@@ -96,9 +96,9 @@ async def show_r1_r7(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     order = await order_service.get_order(context.session, order_id)
 
-    r1r7_file = await egrn_requests_api.get_request(order.egrn_request_id)
+    r1r7_file = await egrn_requests_api.get_r1r7_file(order.egrn_request_id)
 
-    filename = f"r1r7_{order.egrn_request_id}_{order.cadnum}.xlsx"
+    filename = f"r1r7_{order.id}_{order.cadnum}.xlsx"
 
     await update.callback_query.message.reply_document(
         document=r1r7_file,
@@ -122,5 +122,22 @@ async def cancel_insert_invoice(update: Update, context: ContextTypes.DEFAULT_TY
 
     await delete_messages(context)
     await delete_message_or_skip(update.message)
+
+    return ConversationHandler.END
+
+
+async def send_reestr_to_production(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    order_id = int(update.callback_query.data.split('_')[-1])
+
+    order = await order_service.get_order(context.session, order_id)
+
+    await egrn_requests_api.reestr_to_production(order.egrn_request_id)
+
+    await update.callback_query.answer(
+        text="Реестр отправлен в производство",
+        show_alert=True,
+    )
+
+    await delete_message_or_skip(update.effective_message)
 
     return ConversationHandler.END

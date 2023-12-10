@@ -52,3 +52,10 @@ def register_handlers(app: Application):
             'delete_r1r7',
         )
     )
+
+    app.add_handler(
+        CallbackQueryHandler(
+            handlers.send_reestr_to_production,
+            'start_reestr_production',
+        )
+    )

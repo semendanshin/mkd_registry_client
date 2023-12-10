@@ -7,6 +7,6 @@ def register_handlers(application: Application):
     application.add_handler(
         CallbackQueryHandler(
             handle_payment,
-            'confirmed_payment_*',
+            'paid_*',
         ),
     )
