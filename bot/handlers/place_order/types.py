@@ -6,7 +6,7 @@ from database.enums import ClientTypeEnum
 
 class PlaceOrderData(BaseModel):
     user_id: int = None
-    username: str = None
+    username: Optional[str] = None
     first_name: str = None
 
     egrn_request_id: int = None

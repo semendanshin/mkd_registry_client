@@ -57,11 +57,7 @@ async def get_order_fio_file(
     )
 
 
-@root_router.post("/order/{order_id:int}/callback/r1r7_is_ready")
-async def order_callback(
-        order_id: int,
-        session: AsyncSession = Depends(get_session),
-) -> Response:
+async def send_r1r7_to_admin(session: AsyncSession, order_id: int):
     order = await order_service.get_order(session, order_id)
 
     if not order:
@@ -92,10 +88,24 @@ async def order_callback(
         reply_markup=keyboard,
     )
 
+
+@root_router.post("/order/{order_id:int}/callback/r1r7_is_ready")
+async def order_callback(
+        order_id: int,
+        background_tasks: BackgroundTasks,
+        session: AsyncSession = Depends(get_session),
+) -> Response:
+    order = await order_service.get_order(session, order_id)
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    background_tasks.add_task(send_r1r7_to_admin, session, order_id)
+
     return JSONResponse(status_code=200, content={"message": "ok"})
 
 
-async def send_registry_file(session: AsyncSession, order_id):
+async def send_registry_file_to_admin(session: AsyncSession, order_id):
     order = await order_service.get_order(session, order_id)
 
     if not order:
@@ -139,6 +149,6 @@ async def order_callback(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    background_tasks.add_task(send_registry_file, session, order_id)
+    background_tasks.add_task(send_registry_file_to_admin, session, order_id)
 
     return JSONResponse(status_code=200, content={"message": "ok"})
