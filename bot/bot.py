@@ -9,6 +9,7 @@ from bot.handlers.place_order.register_handlers import register_handlers as regi
 from bot.handlers.statistics.register_handlers import register_handlers as register_statistics_handlers
 from bot.handlers.payments.register_handlers import register_handlers as register_payments_handlers
 from bot.handlers.admin_order_processing.register_handlers import register_handlers as register_admin_order_processing_handlers
+from bot.handlers.error.register_handlers import register_handlers as register_error_handlers
 
 
 from bot.middlewares import SessionMiddleware, UserMiddleware, Middleware
@@ -64,6 +65,7 @@ def get_telegram_app() -> Application:
     register_statistics_handlers(app)
     register_payments_handlers(app)
     register_admin_order_processing_handlers(app)
+    register_error_handlers(app)
 
     # app.add_error_handler(send_stacktrace_to_tg_chat)
 
