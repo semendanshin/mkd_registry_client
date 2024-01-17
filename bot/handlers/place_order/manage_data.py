@@ -20,7 +20,8 @@ async def create_order(session: AsyncSession, order: PlaceOrderData) -> Order:
         inn=order.inn,
         company_name=order.company_name,
         fio=order.fio,
-        fio_file_telegram_id=order.telegram_file_id
+        fio_file_telegram_id=order.telegram_file_id,
+        email=order.email,
     )
 
     return await order_service.create_order(session, order_create)
