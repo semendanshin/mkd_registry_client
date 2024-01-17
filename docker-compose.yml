@@ -26,7 +26,6 @@ services:
       db_url: ${db_url}
     container_name: mkd_bot
     restart: unless-stopped
-#    command: sh -c "python main.py"
     command: sh -c "uvicorn main:app --port 9999 --host 0.0.0.0"
     volumes:
       - ./logs:/code/logs

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, BigInteger, String, Enum, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, Mapped, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.dialects import postgresql
 
 from datetime import datetime
 
@@ -17,7 +18,7 @@ class User(AsyncAttrs, Base):
     username: Mapped[str] = Column(String, unique=True, nullable=True)
     first_name: Mapped[str] = Column(String, nullable=True)
     last_name: Mapped[str] = Column(String, nullable=True)
-    role: Mapped[UserRolesEnum] = Column(Enum(UserRolesEnum), default=UserRolesEnum.USER)
+    role: Mapped[UserRolesEnum] = Column(postgresql.ENUM(UserRolesEnum), default=UserRolesEnum.USER)
 
     orders: Mapped[list["Order"]] = relationship("Order", back_populates="user")
 
@@ -37,18 +38,27 @@ class Order(Base):
     address:  Mapped[str] = Column(String, nullable=False)
     cadnum:  Mapped[str] = Column(String, nullable=False)
     contact_phone:  Mapped[str] = Column(String, nullable=False)
-    client_type:  Mapped[ClientTypeEnum] = Column(Enum(ClientTypeEnum), nullable=False)
+    client_type:  Mapped[ClientTypeEnum] = Column(postgresql.ENUM(ClientTypeEnum), nullable=False)
     inn:  Mapped[str] = Column(String, nullable=True)
     company_name:  Mapped[str] = Column(String, nullable=True)
     fio:  Mapped[str] = Column(String, nullable=True)
+    email:  Mapped[str] = Column(String, nullable=True)
 
     fio_file_telegram_id:  Mapped[str] = Column(String, nullable=True)
     invoice_file_telegram_id:  Mapped[str] = Column(String, nullable=True)
     r1r7_file_telegram_id:  Mapped[str] = Column(String, nullable=True)
 
-    status = Column(Enum(OrderStatusEnum), default=OrderStatusEnum.CREATED)
+    room_rows_count: Mapped[int] = Column(BigInteger, nullable=True)
+    fio_rows_count: Mapped[int] = Column(BigInteger, nullable=True)
+    total_area: Mapped[float] = Column(BigInteger, nullable=True)
+
+    price: Mapped[float] = Column(BigInteger, nullable=True)
+    paid_at: Mapped[datetime] = Column(DateTime, nullable=True)
+
+    status = Column(postgresql.ENUM(OrderStatusEnum), default=OrderStatusEnum.CREATED)
 
     created_at: Mapped[datetime] = Column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user: Mapped["User"] = relationship("User", back_populates="orders")
 

@@ -59,3 +59,17 @@ def register_handlers(app: Application):
             'start_reestr_production',
         )
     )
+
+    app.add_handler(
+        CallbackQueryHandler(
+            handlers.send_complete_registry_for_email,
+            'send_registry_file_to_email_',
+        )
+    )
+
+    app.add_handler(
+        CallbackQueryHandler(
+            handlers.send_complete_registry_to_client,
+            'send_registry_file_to_tg_',
+        )
+    )

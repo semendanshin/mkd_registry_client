@@ -1,6 +1,7 @@
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, ConversationHandler, CallbackQueryHandler
 
-from bot.handlers.start.keyboards import USERS_KEYBOARD_BUTTON_TEXT, ORDERS_KEYBOARD_BUTTON_TEXT
+from bot.handlers.start.keyboards import USERS_KEYBOARD_BUTTON_TEXT, ORDERS_KEYBOARD_BUTTON_TEXT, \
+    CLIENTS_KEYBOARD_BUTTON_TEXT
 
 from . import handlers
 
@@ -17,5 +18,14 @@ def register_handlers(application: Application):
         MessageHandler(
             filters.Text(ORDERS_KEYBOARD_BUTTON_TEXT),
             handlers.show_orders,
+        ),
+    )
+
+
+
+    application.add_handler(
+        CommandHandler(
+            'order',
+            handlers.show_order,
         ),
     )

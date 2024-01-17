@@ -1,9 +1,11 @@
-from telegram import Update
+from sqlalchemy.ext.asyncio import AsyncSession
+from telegram import Update, Bot
 from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.utils.utils import delete_message_or_skip, delete_messages
 
 from crud import order as order_service
+from database.models import Order
 from egrn_requests_api import egrn_requests_api
 
 from database.enums import OrderStatusEnum
@@ -41,6 +43,8 @@ async def admin_cancel_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     await delete_message_or_skip(update.callback_query.message)
 
+    await order_service.update_order(context.session, order_id, status=OrderStatusEnum.CANCLED)
+
     return ConversationHandler.END
 
 
@@ -72,14 +76,17 @@ async def insert_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_document(
         chat_id=order.user_id,
-        caption=f"Оплатите заказ номер {order.id}",
+        caption=f"Информация для оплаты заказа № {order_id}. "
+                f"Внимание, стоимость заказа актуальна при оплате в течение 48 часов.",
         document=file_id,
         reply_markup=get_paid_keyboard(order.id),
     )
 
-    await update.message.reply_text(
-        text="Счет успешно добавлен",
-    )
+    # await update.message.reply_text(
+    #     text="Счет отправлен",
+    # )
+
+    await order_service.update_order(context.session, order_id, status=OrderStatusEnum.INVOICESENT)
 
     await delete_message_or_skip(update.message)
     await delete_message_or_skip(context.user_data.get("effective_message"))
@@ -136,6 +143,48 @@ async def send_reestr_to_production(update: Update, context: ContextTypes.DEFAUL
     await update.callback_query.answer(
         text="Реестр отправлен в производство",
         show_alert=True,
+    )
+
+    await delete_message_or_skip(update.effective_message)
+
+    return ConversationHandler.END
+
+
+async def send_registry_file(bot: Bot, order: Order, chat_id: int):
+    file_bytes = await egrn_requests_api.get_registry_file(order.egrn_request_id)
+
+    await bot.send_document(
+        chat_id=chat_id,
+        document=file_bytes,
+        filename=f"{order.id}_реестр.xlsx",
+    )
+
+
+async def send_complete_registry_for_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    order_id = int(update.callback_query.data.split('_')[-1])
+
+    order = await order_service.get_order(context.session, order_id)
+
+    await send_registry_file(
+        context.bot,
+        order,
+        update.effective_message.chat_id
+    )
+
+    await delete_message_or_skip(update.effective_message)
+
+    return ConversationHandler.END
+
+
+async def send_complete_registry_to_client(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    order_id = int(update.callback_query.data.split('_')[-1])
+
+    order = await order_service.get_order(context.session, order_id)
+
+    await send_registry_file(
+        context.bot,
+        order,
+        order.user_id
     )
 
     await delete_message_or_skip(update.effective_message)

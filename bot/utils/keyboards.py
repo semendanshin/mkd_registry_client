@@ -25,3 +25,13 @@ def get_confirm_keyboard(callback_pattern_start: str) -> InlineKeyboardMarkup:
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_delete_message_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton('Удалить', callback_data='delete_message'),
+            ],
+        ]
+    )

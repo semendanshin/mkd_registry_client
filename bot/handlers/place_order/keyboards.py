@@ -30,6 +30,15 @@ def get_confirm_fio_or_inn_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+CONFIRM_EMAIL_PATTERN = 'place_order_confirm_email'
+
+
+def get_confirm_email_keyboard() -> InlineKeyboardMarkup:
+    return get_confirm_keyboard(
+        callback_pattern_start=CONFIRM_EMAIL_PATTERN,
+    )
+
+
 CLIENT_TYPE_PATTERN = 'place_order_client_type'
 
 

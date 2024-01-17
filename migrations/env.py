@@ -9,6 +9,7 @@ from database.models import Base
 
 from alembic import context
 
+import alembic_postgresql_enum
 import os
 
 # this is the Alembic Config object, which provides

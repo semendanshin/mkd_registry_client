@@ -15,6 +15,8 @@ class PlaceOrderConversationSteps(pyEnum):
     CONFIRM_INN_OR_FIO = 'confirm_inn_or_fio'
     ADD_FIO_FILE = 'add_fio_file'
     CONFIRM_ORDER = 'confirm_order'
+    EMAIL = 'email'
+    CONFIRM_EMAIL = 'confirm_email'
 
 
 class ClientTypeHumanReadable(pyEnum):

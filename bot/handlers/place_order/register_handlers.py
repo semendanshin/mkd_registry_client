@@ -25,6 +25,12 @@ def register_handlers(app: Application):
             PlaceOrderConversationSteps.CONFIRM_PHONE: [
                 CallbackQueryHandler(confirm_contact_phone, pattern=r"^place_order_confirm_contact_phone_(1|0)$"),
             ],
+            PlaceOrderConversationSteps.EMAIL: [
+                MessageHandler(filters.Text() & ~filters.Command(), process_email),
+            ],
+            PlaceOrderConversationSteps.CONFIRM_EMAIL: [
+                CallbackQueryHandler(confirm_email, pattern=r"^place_order_confirm_email_(1|0)$"),
+            ],
             PlaceOrderConversationSteps.CHOOSE_CLIENT_TYPE: [
                 CallbackQueryHandler(process_client_type, pattern=r"^place_order_client_type_"),
             ],

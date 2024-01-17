@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 
 from bot.handlers.place_order.manage_data import get_order_card_text_from_orm
 from bot.utils.utils import delete_messages, delete_message_or_skip
+from database.enums import OrderStatusEnum
 from egrn_requests_api import egrn_requests_api
 
 from crud import user as user_service
@@ -20,7 +21,7 @@ async def handle_payment(update: Update, context: CallbackContext):
     if not admin:
         raise RuntimeError("Admin not found")
 
-    text = "Заказ оплачен\n\n"
+    text = "Подтвердите оплату заказа\n\n"
     text += await get_order_card_text_from_orm(context.session, order)
 
     keyboard = InlineKeyboardMarkup(
@@ -37,10 +38,12 @@ async def handle_payment(update: Update, context: CallbackContext):
         reply_markup=keyboard,
     )
 
-    await delete_messages(context)
-    await delete_message_or_skip(update.callback_query.message)
-
     await update.callback_query.answer(
         text="Отправлено в работу",
         show_alert=True,
     )
+
+    await order_service.update_order(context.session, order_id, status=OrderStatusEnum.REGISTRYINWORK)
+
+    await delete_messages(context)
+    await delete_message_or_skip(update.callback_query.message)

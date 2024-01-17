@@ -1,21 +1,16 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import HTTPException
+from pydantic import BaseModel
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaDocument, Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_session
+from api.business import send_r1r7_to_admin, send_registry_file_to_admin
 
 from crud import order as order_service
-from crud import user as user_service
-
-from egrn_requests_api import egrn_requests_api
 
 from bot import telegram_app
-from bot.handlers.place_order.manage_data import get_order_card_text_from_orm
-
-from .types import OrderCallbackInput
 
 import io
 
@@ -57,41 +52,15 @@ async def get_order_fio_file(
     )
 
 
-async def send_r1r7_to_admin(session: AsyncSession, order_id: int):
-    order = await order_service.get_order(session, order_id)
-
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    bot: Bot = telegram_app.bot
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="Выставить счет", callback_data=f"insert_invoice_{order.id}"),
-                InlineKeyboardButton(text="Р1Р7", callback_data=f"show_r1_r7_{order.id}"),
-            ]
-        ]
-    )
-
-    admins = await user_service.get_admins(session)
-    admin = admins[0] if admins else None
-
-    if not admin:
-        raise RuntimeError("Admin not found")
-
-    text = await get_order_card_text_from_orm(session, order)
-
-    await bot.send_message(
-        chat_id=admin.id,
-        text=text,
-        reply_markup=keyboard,
-    )
+class R1R7BodyModel(BaseModel):
+    room_rows_count: int
+    fio_rows_count: int
 
 
 @root_router.post("/order/{order_id:int}/callback/r1r7_is_ready")
-async def order_callback(
+async def order_callback_r1r7_is_ready(
         order_id: int,
+        r1r7_request_model: R1R7BodyModel,
         background_tasks: BackgroundTasks,
         session: AsyncSession = Depends(get_session),
 ) -> Response:
@@ -99,48 +68,27 @@ async def order_callback(
 
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    await order_service.update_order(
+        session,
+        order_id,
+        room_rows_count=r1r7_request_model.room_rows_count,
+        fio_rows_count=r1r7_request_model.fio_rows_count,
+    )
 
     background_tasks.add_task(send_r1r7_to_admin, session, order_id)
 
     return JSONResponse(status_code=200, content={"message": "ok"})
 
 
-async def send_registry_file_to_admin(session: AsyncSession, order_id):
-    order = await order_service.get_order(session, order_id)
-
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    bot: Bot = telegram_app.bot
-
-    admins = await user_service.get_admins(session)
-    admin = admins[0] if admins else None
-
-    if not admin:
-        raise RuntimeError("Admin not found")
-
-    text = "Заказ готов\n\n"
-    text += await get_order_card_text_from_orm(session, order)
-
-    file_bytes = await egrn_requests_api.get_registry_file(order.egrn_request_id)
-
-    await bot.send_message(
-        chat_id=admin.id,
-        text=text,
-    )
-
-    await bot.send_document(
-        chat_id=admin.id,
-        document=file_bytes,
-        filename=f"Реестр_{order.id}.xlsx",
-    )
-
-    return JSONResponse(status_code=200, content={"message": "ok"})
+class RegistryBodyModel(BaseModel):
+    total_area: float
 
 
 @root_router.post("/order/{order_id:int}/callback/registry_is_ready")
-async def order_callback(
+async def order_callback_registry_is_ready(
         order_id: int,
+        registry_request_model: RegistryBodyModel,
         background_tasks: BackgroundTasks,
         session: AsyncSession = Depends(get_session),
 ) -> Response:
@@ -148,6 +96,12 @@ async def order_callback(
 
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    await order_service.update_order(
+        session,
+        order_id,
+        total_area=registry_request_model.total_area,
+    )
 
     background_tasks.add_task(send_registry_file_to_admin, session, order_id)
 

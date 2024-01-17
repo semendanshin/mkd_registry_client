@@ -7,6 +7,7 @@ TEXTS = {
     PlaceOrderConversationSteps.ADD_INN: 'Введите ИНН:',
     PlaceOrderConversationSteps.ADD_FIO: 'Введите ФИО:',
     PlaceOrderConversationSteps.ADD_FIO_FILE: 'Вставьте файл с ФИО собственников в формате Excel (пропустить -> /0):',
+    PlaceOrderConversationSteps.EMAIL: 'Укажите ваш email для отправки готового Реестра:',
 }
 
 ADDRESS_AND_CADNUM_CONFIRMATION_TEMPLATE = '{address} ({cadnum})\n' \
@@ -25,12 +26,16 @@ THANKS_FOR_ORDER = 'Спасибо за вашу заявку!\n' \
                    'Мы уже приступили к выполнению вашего заказа.\n' \
                    'В ближайшее время Вы получите расчет цены за РеестрМКД.'
 
+EMAIL_CONFIRMATION_TEMPLATE = '{email}\n' \
+                              'Все верно?'
+
 ORDER_TEMPLATE = '<b>Реестр МКД ({fio_is_provided_text})</b>\n' \
                  '{order_number_text}' \
                  '<b>Кадномер:</b> {cadnum}\n' \
                  '<b>Адрес:</b> {address}\n' \
                  '<b>Ник заказчика:</b> @{username} ({first_name})\n' \
                  '<b>Телефон (WhatsApp):</b> {phone}\n' \
+                 '<b>Email:</b> {email}\n' \
                  '{customer_info}\n' \
                  '{filename}\n'
 

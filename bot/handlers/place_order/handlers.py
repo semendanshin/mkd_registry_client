@@ -14,6 +14,7 @@ from .keyboards import get_confirm_contact_phone_keyboard, CONFIRM_CONTACT_PHONE
 from .keyboards import get_client_type_keyboard, CLIENT_TYPE_PATTERN
 from .keyboards import get_confirm_fio_or_inn_keyboard, CONFIRM_FIO_OR_INN_PATTERN
 from .keyboards import get_confirm_order_keyboard, CONFIRM_ODER_PATTERN
+from .keyboards import get_confirm_email_keyboard, CONFIRM_EMAIL_PATTERN
 from .keyboards import get_to_work_keyboard
 from .static_text import (
     TEXTS,
@@ -22,6 +23,7 @@ from .static_text import (
     FIO_CONFIRMATION_TEMPLATE,
     INN_CONFIRMATION_TEMPLATE,
     THANKS_FOR_ORDER,
+    EMAIL_CONFIRMATION_TEMPLATE,
     LEGAL_ORDER_INFO_TEMPLATE,
     INDIVIDUAL_ORDER_INFO_TEMPLATE,
     ORDER_TEMPLATE,
@@ -55,9 +57,10 @@ async def process_address(update: Update, context: ContextTypes.DEFAULT_TYPE):
     address = update.message.text
 
     clean_address = dadata.get_clean_data(address)
-
-    if not clean_address:
-        raise Exception("какашки")
+    if not clean_address.house_cadnum:
+        clean_address = dadata.get_clean_data(address + ' литера')
+        if not clean_address.house_cadnum:
+            raise Exception("какашки")
 
     data.address = clean_address.result
     data.cadnum = clean_address.house_cadnum
@@ -178,6 +181,58 @@ async def confirm_contact_phone(update: Update, context: ContextTypes.DEFAULT_TY
 
     if callback_data:
         message = await update.effective_message.reply_text(
+            TEXTS[PlaceOrderConversationSteps.EMAIL],
+        )
+
+        await delete_message_or_skip(update.effective_message)
+        await delete_messages(context)
+
+        context.user_data["messages_to_delete"].extend([message, update.message])
+
+        return PlaceOrderConversationSteps.EMAIL
+
+    else:
+        message = await update.effective_message.reply_text(
+            TEXTS[PlaceOrderConversationSteps.CONTACT_PHONE],
+        )
+
+        await delete_message_or_skip(update.effective_message)
+        await delete_messages(context)
+
+        context.user_data["messages_to_delete"].extend([message, update.message])
+
+        return PlaceOrderConversationSteps.CONTACT_PHONE
+
+
+async def process_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data: PlaceOrderData = context.user_data["place_order_data"]
+
+    email = update.message.text
+
+    data.email = email
+
+    message = await update.effective_message.reply_text(
+        EMAIL_CONFIRMATION_TEMPLATE.format(
+            email=data.email,
+        ),
+        reply_markup=get_confirm_email_keyboard(),
+    )
+
+    await delete_message_or_skip(update.effective_message)
+    await delete_messages(context)
+
+    context.user_data["messages_to_delete"].extend([message, update.message])
+
+    return PlaceOrderConversationSteps.CONFIRM_EMAIL
+
+
+async def confirm_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.answer()
+
+    callback_data = int(update.callback_query.data.replace(CONFIRM_EMAIL_PATTERN + '_', ""))
+
+    if callback_data:
+        message = await update.effective_message.reply_text(
             TEXTS[PlaceOrderConversationSteps.CHOOSE_CLIENT_TYPE],
             reply_markup=get_client_type_keyboard(),
         )
@@ -191,7 +246,7 @@ async def confirm_contact_phone(update: Update, context: ContextTypes.DEFAULT_TY
 
     else:
         message = await update.effective_message.reply_text(
-            TEXTS[PlaceOrderConversationSteps.CONTACT_PHONE],
+            TEXTS[PlaceOrderConversationSteps.EMAIL],
         )
 
         await delete_message_or_skip(update.effective_message)
@@ -199,7 +254,7 @@ async def confirm_contact_phone(update: Update, context: ContextTypes.DEFAULT_TY
 
         context.user_data["messages_to_delete"].extend([message, update.message])
 
-        return PlaceOrderConversationSteps.CONTACT_PHONE
+        return PlaceOrderConversationSteps.EMAIL
 
 
 async def process_client_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -367,8 +422,6 @@ async def show_order_confirmation(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.callback_query.answer()
-
     callback_data = int(update.callback_query.data.replace(CONFIRM_ODER_PATTERN + '_', ""))
 
     if callback_data:
@@ -410,13 +463,15 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=text,
             )
 
-        await update.effective_message.reply_text(
-            THANKS_FOR_ORDER,
+        await update.callback_query.answer(
+            text=THANKS_FOR_ORDER,
+            show_alert=True,
         )
 
         del context.user_data["place_order_data"]
 
     else:
+        await update.callback_query.answer()
         await update.effective_message.reply_text(
             TEXTS[PlaceOrderConversationSteps.ADDRESS_OR_CADNUMBER],
         )

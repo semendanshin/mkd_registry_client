@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from database.models import Order
+from database.enums import OrderStatusEnum
 
 from schemas.order import OrderCreate
 
@@ -33,3 +34,23 @@ async def update_order(session: AsyncSession, order_id: int, **kwargs) -> Order:
     await session.commit()
     await session.refresh(order)
     return order
+
+
+async def get_orders(session: AsyncSession) -> list[Order]:
+    result = await session.execute(select(Order))
+    return list(result.scalars().all())
+
+
+async def get_orders_by_status(session: AsyncSession, status: OrderStatusEnum) -> list[Order]:
+    result = await session.execute(select(Order).filter(Order.status == status))
+    return list(result.scalars().all())
+
+
+async def get_orders_by_user_id(session: AsyncSession, user_id: int) -> list[Order]:
+    result = await session.execute(select(Order).filter(Order.user_id == user_id))
+    return list(result.scalars().all())
+
+
+async def get_orders_by_statuses(session: AsyncSession, statuses: list[OrderStatusEnum]) -> list[Order]:
+    result = await session.execute(select(Order).filter(Order.status.in_(statuses)))
+    return list(result.scalars().all())

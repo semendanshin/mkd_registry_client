@@ -1,8 +1,8 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func, and_, or_, not_
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User
 from schemas.user import UserCreate
-from database.enums import UserRolesEnum
+from database.enums import UserRolesEnum, OrderStatusEnum
 from typing import Optional
 
 
@@ -57,3 +57,53 @@ async def get_admins(session: AsyncSession) -> list[User]:
 async def get_users(session: AsyncSession) -> list[User]:
     result = await session.execute(select(User))
     return list(result.scalars().all())
+
+
+async def get_non_clients(session: AsyncSession) -> list[User]:
+    # non-client is user who have 0 placed orders with status != 'canceled' or 'created'
+    statement = select(User).join(User.orders).where(
+        func.count(
+            User.orders
+        ) -
+        func.count(
+            User.orders.filter(
+                or_(
+                    User.orders.any(status=OrderStatusEnum.CANCLED),
+                    User.orders.any(status=OrderStatusEnum.CREATED),
+                )
+            )
+        ) == 0,
+    )
+    result = await session.execute(statement)
+    return list(result.scalars().all())
+
+
+async def get_clients(session: AsyncSession) -> list[User]:
+    # client is user who have >0 placed orders with status != 'canceled' or 'created'
+    statement = select(User).join(User.orders).where(
+        func.count(
+            User.orders
+        ) -
+        func.count(
+            User.orders.filter(
+                or_(
+                    User.orders.any(status=OrderStatusEnum.CANCLED),
+                    User.orders.any(status=OrderStatusEnum.CREATED),
+                )
+            )
+        ) > 0,
+    )
+    result = await session.execute(statement)
+    return list(result.scalars().all())
+
+
+async def is_client(session: AsyncSession, user_id: int) -> bool:
+    statement = select(User).join(User.orders).where(
+        and_(
+            User.id == user_id,
+            not_(or_(User.orders.any(status=OrderStatusEnum.CREATED), User.orders.any(status=OrderStatusEnum.CREATED))),
+            func.count(User.orders) > 0
+        )
+    )
+    result = await session.execute(statement)
+    return bool(result.scalars().first())

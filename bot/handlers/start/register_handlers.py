@@ -13,7 +13,13 @@ def register_handlers(app: Application):
     )
     app.add_handler(
         CallbackQueryHandler(
-            handlers.delete_obrazec,
+            handlers.delete_message,
             'delete_obrazec',
+        )
+    )
+    app.add_handler(
+        CallbackQueryHandler(
+            handlers.delete_message,
+            'delete_message',
         )
     )

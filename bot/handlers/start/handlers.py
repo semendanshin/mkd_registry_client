@@ -44,5 +44,5 @@ async def show_register_sample(update: Update, context: ContextTypes.DEFAULT_TYP
         )
 
 
-async def delete_obrazec(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await delete_message_or_skip(update.effective_message)

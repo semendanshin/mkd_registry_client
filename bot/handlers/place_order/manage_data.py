@@ -48,13 +48,14 @@ def get_order_card_text(data: PlaceOrderData | Order, order_id: int = -1) -> str
         username=data.username or "(У пользователя нет username)",
         first_name=data.first_name,
         phone=data.contact_phone,
+        email=data.email,
         customer_info=LEGAL_ORDER_INFO_TEMPLATE.format(
             org_name=data.company_name,
             inn=data.inn,
         ) if data.client_type == ClientTypeEnum.LEGAL else INDIVIDUAL_ORDER_INFO_TEMPLATE.format(
             fio=data.fio,
         ),
-        filename=data.filename or "Файл не прикреплен",
+        filename=data.filename if data.filename else "",
     )
 
 
@@ -69,6 +70,7 @@ async def get_order_card_text_from_orm(session: AsyncSession, order: Order):
         address=order.address,
         cadnum=order.cadnum,
         contact_phone=order.contact_phone,
+        email=order.email,
         client_type=order.client_type,
         inn=order.inn,
         company_name=order.company_name,

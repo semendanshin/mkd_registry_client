@@ -17,8 +17,9 @@ def get_main_keyboard_for_user() -> ReplyKeyboardMarkup:
     )
 
 
-USERS_KEYBOARD_BUTTON_TEXT = 'Пользователи🤸🏼'
-ORDERS_KEYBOARD_BUTTON_TEXT = 'Заказы🚚'
+USERS_KEYBOARD_BUTTON_TEXT = 'Юзеры🤸🏼'
+CLIENTS_KEYBOARD_BUTTON_TEXT = 'Клиенты👨🏼‍💻'
+ORDERS_KEYBOARD_BUTTON_TEXT = 'В работе🚚'
 
 
 def get_main_keyboard_for_admin() -> ReplyKeyboardMarkup:
@@ -26,6 +27,7 @@ def get_main_keyboard_for_admin() -> ReplyKeyboardMarkup:
         keyboard=[
             [
                 KeyboardButton(text=USERS_KEYBOARD_BUTTON_TEXT),
+                KeyboardButton(text=CLIENTS_KEYBOARD_BUTTON_TEXT),
                 KeyboardButton(text=ORDERS_KEYBOARD_BUTTON_TEXT),
             ],
         ],
