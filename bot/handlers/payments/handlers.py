@@ -21,7 +21,7 @@ async def handle_payment(update: Update, context: CallbackContext):
     if not admin:
         raise RuntimeError("Admin not found")
 
-    text = "Подтвердите оплату заказа\n\n"
+    text = "Подтвердите получение оплату по заказа\n\n"
     text += await get_order_card_text_from_orm(context.session, order)
 
     keyboard = InlineKeyboardMarkup(

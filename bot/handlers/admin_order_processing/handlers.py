@@ -150,13 +150,14 @@ async def send_reestr_to_production(update: Update, context: ContextTypes.DEFAUL
     return ConversationHandler.END
 
 
-async def send_registry_file(bot: Bot, order: Order, chat_id: int):
+async def send_registry_file(bot: Bot, order: Order, chat_id: int, text: str = None):
     file_bytes = await egrn_requests_api.get_registry_file(order.egrn_request_id)
 
     await bot.send_document(
         chat_id=chat_id,
         document=file_bytes,
         filename=f"{order.id}_реестр.xlsx",
+        caption=text,
     )
 
 
@@ -171,7 +172,13 @@ async def send_complete_registry_for_email(update: Update, context: ContextTypes
         update.effective_message.chat_id
     )
 
-    await delete_message_or_skip(update.effective_message)
+    await context.bot.send_message(
+        chat_id=order.user_id,
+        text=f"Ваш заказ № {order.id} готов. Файл будет отправлен на указанный вами email",
+    )
+
+    # await delete_message_or_skip(update.effective_message)
+    await update.effective_message.edit_reply_markup(None)
 
     return ConversationHandler.END
 
@@ -187,6 +194,7 @@ async def send_complete_registry_to_client(update: Update, context: ContextTypes
         order.user_id
     )
 
-    await delete_message_or_skip(update.effective_message)
+    # await delete_message_or_skip(update.effective_message)
+    await update.effective_message.edit_reply_markup(None)
 
     return ConversationHandler.END

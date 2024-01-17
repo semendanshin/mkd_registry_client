@@ -21,7 +21,12 @@ def register_handlers(application: Application):
         ),
     )
 
-
+    application.add_handler(
+        MessageHandler(
+            filters.Text(CLIENTS_KEYBOARD_BUTTON_TEXT),
+            handlers.show_clients,
+        ),
+    )
 
     application.add_handler(
         CommandHandler(
