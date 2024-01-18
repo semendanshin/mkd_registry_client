@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 async def show_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    users = await user_service.get_users(context.session)
-    users_text = '\n'.join([f'{user.id} - @{user.username} ({user.first_name} - {user.last_name})' for user in users])
+    users = await user_service.get_non_clients(context.session)
+    users_text = '\n'.join([f'{user.created_at} - {user.first_name} {user.last_name} (@{user.username})' for user in users])
     await update.message.reply_text(
         users_text,
     )
@@ -81,7 +81,7 @@ async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_clients(update: Update, context: ContextTypes.DEFAULT_TYPE):
     clients = await user_service.get_clients(context.session)
-    clients_text = '\n'.join([f'{client.id} - @{client.username} ({client.first_name} - {client.last_name})' for client in clients])
+    clients_text = '\n'.join([f'{client.created_at} - {client.first_name} {client.last_name} (@{client.username})' for client in clients])
     await update.message.reply_text(
         clients_text,
     )
