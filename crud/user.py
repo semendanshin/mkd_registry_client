@@ -61,38 +61,38 @@ async def get_users(session: AsyncSession) -> list[User]:
 
 async def get_non_clients(session: AsyncSession) -> list[User]:
     # non-client is user who have 0 placed orders with status != 'canceled' or 'created'
-    statement = select(User).join(User.orders).where(
+    statement = select(User).join(User.orders).having(
         func.count(
             User.orders
         ) -
         func.count(
-            User.orders.filter(
+            User.orders.any(
                 or_(
                     User.orders.any(status=OrderStatusEnum.CANCLED),
                     User.orders.any(status=OrderStatusEnum.CREATED),
                 )
             )
         ) == 0,
-    )
+    ).group_by(User.id)
     result = await session.execute(statement)
     return list(result.scalars().all())
 
 
 async def get_clients(session: AsyncSession) -> list[User]:
     # client is user who have >0 placed orders with status != 'canceled' or 'created'
-    statement = select(User).join(User.orders).where(
+    statement = select(User).join(User.orders).having(
         func.count(
             User.orders
         ) -
         func.count(
-            User.orders.filter(
+            User.orders.any(
                 or_(
                     User.orders.any(status=OrderStatusEnum.CANCLED),
                     User.orders.any(status=OrderStatusEnum.CREATED),
                 )
             )
         ) > 0,
-    )
+    ).group_by(User.id)
     result = await session.execute(statement)
     return list(result.scalars().all())
 

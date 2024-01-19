@@ -9,19 +9,11 @@ from database.enums import OrderStatusEnum, UserRolesEnum
 from bot.handlers.place_order.manage_data import get_order_card_text_from_orm
 from bot.utils.keyboards import get_delete_message_keyboard
 
-from .manage_data import render_orders
+from .manage_data import render_orders, render_user
 
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-async def show_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    users = await user_service.get_non_clients(context.session)
-    users_text = '\n'.join([f'{user.created_at} - {user.first_name} {user.last_name} (@{user.username})' for user in users])
-    await update.message.reply_text(
-        users_text,
-    )
 
 
 async def show_orders(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -38,7 +30,7 @@ async def show_orders(update: Update, context: ContextTypes.DEFAULT_TYPE):
     orders_text = render_orders(orders)
 
     await update.message.reply_text(
-        orders_text,
+        orders_text or "Нет активных заказов",
     )
 
 
@@ -81,7 +73,15 @@ async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_clients(update: Update, context: ContextTypes.DEFAULT_TYPE):
     clients = await user_service.get_clients(context.session)
-    clients_text = '\n'.join([f'{client.created_at} - {client.first_name} {client.last_name} (@{client.username})' for client in clients])
+    clients_text = '\n'.join([render_user(client) for client in clients])
     await update.message.reply_text(
-        clients_text,
+        clients_text or "Нет клиентов",
+    )
+
+
+async def show_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    users = await user_service.get_non_clients(context.session)
+    users_text = '\n'.join([render_user(user) for user in users])
+    await update.message.reply_text(
+        users_text or "Нет пользователей",
     )
